@@ -1,8 +1,8 @@
 
 
-
-use reqwest::{ Client,multipart};
-
+use tokio::fs::File;
+use tokio_util::codec::{BytesCodec, FramedRead};
+use reqwest::{Body, Client,multipart};
 use super::httpclient::HttpBinResult;
 
 
@@ -12,7 +12,12 @@ async fn reqwest_multipart_form(url:&str) -> anyhow::Result<HttpBinResult> {
 
 
 
-    let bio = multipart::Part::text("hallo peeps")
+
+    //路径和 cargo.toml 在一个目录下面
+    let file = File::open(".gitignore").await?;
+    let file_body = file_to_body(file);
+
+    let bio = multipart::Part::stream(file_body)
     .file_name("bio.txt")
     .mime_str("text/plain")?;
 
@@ -23,13 +28,19 @@ async fn reqwest_multipart_form(url:&str) -> anyhow::Result<HttpBinResult> {
 
 
     let response = client.post(url).multipart(form).send().await?;
-    //let t = response.text().await?;
-    //println!("{:?}",t   );
+    // let print_string = response.text().await?;
+    // println!("{:?}",print_string   );
     let result = response.json::<HttpBinResult>().await?;
-
+    // let result = HttpBinResult { args: None, data:None, files:None, form:None, headers: None, json: None, origin: None, url: None };
     Ok(result)
 }
 
+
+fn file_to_body(file: File) -> Body {
+    let stream = FramedRead::new(file, BytesCodec::new());
+    let body = Body::wrap_stream(stream);
+    body
+}
 
 #[cfg(test)]
 mod tests {
@@ -45,3 +56,4 @@ mod tests {
     }
 
 }
+

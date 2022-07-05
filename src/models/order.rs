@@ -12,11 +12,11 @@ pub struct Order {
 }
 
 
-impl Order {
+// impl Order {
 
-    pub async  fn list(db :&MySqlPool)->Result<Vec<Self>> {
-        sqlx::query_as::<_, Self>("SELECT * FROM orders ORDER BY ?").bind("id").fetch_all(db).await
-    }
+//     pub async  fn list(db :&MySqlPool)->Result<Vec<Self>> {
+//         sqlx::query_as::<_, Self>("SELECT * FROM orders ORDER BY ?").bind("id").fetch_all(db).await
+//     }
 
 
-}
+// }

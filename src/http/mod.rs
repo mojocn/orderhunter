@@ -1,18 +1,26 @@
+
+mod apiuser;
+mod apiauth;
+mod apimachine;
+
+use serde::Serialize;
+use serde::Deserialize;
+
 use crate::config::Config;
 use anyhow::Context;
 use axum::{extract::Extension, routing::get, Router};
-use sqlx::MySqlPool;
+use sqlx::SqlitePool;
 use tower_http::trace::TraceLayer;
 
 use std::sync::Arc;
 
 #[derive(Clone)]
-struct ApiContext {
+pub struct ApiContext {
     config: Arc<Config>,
-    db: MySqlPool,
+    db: SqlitePool,
 }
 
-pub async fn serve(config: Config, db: MySqlPool) -> anyhow::Result<()> {
+pub async fn serve(config: Config, db: SqlitePool) -> anyhow::Result<()> {
     let addr = &config
         .http_addr
         .as_str()
@@ -37,9 +45,16 @@ pub async fn serve(config: Config, db: MySqlPool) -> anyhow::Result<()> {
 
 fn api_router() -> Router {
     // This is the order that the modules were authored in.
-    Router::new()
 
-    // users::router()
+    apiuser::router()
     // .merge(profiles::router())
     // .merge(articles::router())
+}
+
+
+#[derive(Debug, Serialize)]
+struct ResultObject<T:Serialize> {
+    pub code: u8,
+    pub msg :String,
+    pub data: T,
 }
